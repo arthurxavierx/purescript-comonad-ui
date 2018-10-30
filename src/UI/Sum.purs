@@ -32,10 +32,10 @@ liftLeft t = TransitionT (runTransitionT t <<< S.lowerLeft)
 liftRight :: forall w1 w2 m. TransitionT w2 m ~> TransitionT (S.Sum w1 w2) m
 liftRight t = TransitionT (runTransitionT t <<< S.lowerRight)
 
-liftUILeft :: forall w1 w2 m. Comonad w1 => Functor m => UI m w1 ~> UI m (S.Sum w1 w2)
+liftUILeft :: forall w1 w2 m f. Comonad w1 => Functor m => UI m w1 f ~> UI m (S.Sum w1 w2) f
 liftUILeft = liftUI S.lowerLeft
 
-liftUIRight :: forall w1 w2 m. Comonad w2 => Functor m => UI m w2 ~> UI m (S.Sum w1 w2)
+liftUIRight :: forall w1 w2 m f. Comonad w2 => Functor m => UI m w2 f ~> UI m (S.Sum w1 w2) f
 liftUIRight = liftUI S.lowerRight
 
 moveLeft :: forall w1 w2 m. Comonad w1 => TransitionT (S.Sum w1 w2) m Unit

@@ -40,7 +40,7 @@ lift
 lift l t = TransitionT \s -> runTransitionT t (S.lower l s)
 
 liftUI
-  :: forall l w r rl rest m
+  :: forall l w r rl rest m f
    . IsSymbol l
   => Row.Cons l (Proxy2 w) rest r
   => Comonad w
@@ -48,5 +48,5 @@ liftUI
   => Row.RowToList rest rl
   => ComonadSmash rl rest
   => SProxy l
-  -> UI.UI m w ~> UI.UI m (Smash r)
+  -> UI.UI m w f ~> UI.UI m (Smash r) f
 liftUI = UI.liftUI <<< S.lower

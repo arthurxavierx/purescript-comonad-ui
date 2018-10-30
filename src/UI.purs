@@ -14,10 +14,15 @@ import Control.Monad.Transition.Trans (TransitionT, hoistTransitionT, pairTransi
 -- | purely effectful transitions into purely effectful actions on `m`.
 type Handler m w = TransitionT w m Unit -> m Unit
 
--- | A `UI` is a function which outputs a description of type `a` of an
+-- | A `UI` is a function which outputs a description of type `f a` of an
 -- | interface given a way to handle the transitions dispatched by this
 -- | interface through means of a `Handler`.
-type UI m w a = Handler m w -> a
+-- |
+-- | The type `f` may be called "communication type", and should be, ideally, a
+-- | functor. This type allows for sending data to a UI upon rendering
+-- | (e.g. when `f` is `(->) p`), or receiving data from a UI upon rendering
+-- | (e.g. when `f` is `Tuple p`).
+type UI m w f a = Handler m w -> f a
 
 -- | A component is a comonad `w` representing the space of all possible future
 -- | `UI`s. It is a space (or context) containing `UI`s, and the shape of this
@@ -34,7 +39,7 @@ type UI m w a = Handler m w -> a
 -- | In this way, a `Component` is a comonad `w` containing a current `UI` and
 -- | future `UI`s whose `Handler`s handle (in a `m` monad) transitions
 -- | dispoatched by an interface of type `a`.
-type Component m w f a = w (UI m w (f a))
+type Component m w f a = w (UI m w f a)
 
 -- | TODO: write documentation
 explore
@@ -65,20 +70,20 @@ explore_ write space = explore (pure space) write space
 
 -- | TODO: write documentation
 liftUI
-  :: forall m w wp
+  :: forall m w wp f
    . Comonad w
   => Functor m
   => wp ~> w
-  -> UI m w ~> UI m wp
+  -> UI m w f ~> UI m wp f
 liftUI lower ui = \send -> ui (send <<< hoistTransitionT lower)
 
 -- | TODO: write documentation
 liftUIT
-  :: forall m w wp
+  :: forall m w wp f
    . Comonad w
   => Functor m
   => ComonadTrans wp
-  => UI m w ~> UI m (wp w)
+  => UI m w f ~> UI m (wp w) f
 liftUIT = liftUI lower
 
 -- | TODO: write documentation
@@ -87,7 +92,7 @@ liftComponent
    . Comonad w
   => Functor m
   => wp ~> w
-  -> Component m w f a -> UI m wp (f a)
+  -> Component m w f a -> UI m wp f a
 liftComponent lower = liftUI lower <<< extract
 
 -- | TODO: write documentation
@@ -96,5 +101,5 @@ liftComponentT
    . Comonad w
   => Functor m
   => ComonadTrans wp
-  => Component m w f a -> UI m (wp w) (f a)
+  => Component m w f a -> UI m (wp w) f a
 liftComponentT = liftComponent lower

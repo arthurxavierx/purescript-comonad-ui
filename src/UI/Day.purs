@@ -22,7 +22,7 @@ combine
   => Comonad w2
   => Component m w1 f a
   -> Component m w2 f a
-  -> (UI m (D.Day w1 w2) (f a) -> UI m (D.Day w1 w2) (f a) -> UI m (D.Day w1 w2) (f a))
+  -> (UI m (D.Day w1 w2) f a -> UI m (D.Day w1 w2) f a -> UI m (D.Day w1 w2) f a)
   -> Component m (D.Day w1 w2) f a
 combine c1 c2 append = D.day build c1 c2
   where
@@ -34,8 +34,8 @@ liftLeft t = TransitionT (runTransitionT t <<< D.lowerLeft)
 liftRight :: forall w1 w2 m. Functor w2 => Comonad w1 => TransitionT w2 m ~> TransitionT (D.Day w1 w2) m
 liftRight t = TransitionT (runTransitionT t <<< D.lowerRight)
 
-liftUILeft :: forall w1 w2 m. Comonad w1 => Comonad w2 => Functor m => UI m w1 ~> UI m (D.Day w1 w2)
+liftUILeft :: forall w1 w2 m f. Comonad w1 => Comonad w2 => Functor m => UI m w1 f ~> UI m (D.Day w1 w2) f
 liftUILeft = liftUI D.lowerLeft
 
-liftUIRight :: forall w1 w2 m. Comonad w1 => Comonad w2 => Functor m => UI m w2 ~> UI m (D.Day w1 w2)
+liftUIRight :: forall w1 w2 m f. Comonad w1 => Comonad w2 => Functor m => UI m w2 f ~> UI m (D.Day w1 w2) f
 liftUIRight = liftUI D.lowerRight

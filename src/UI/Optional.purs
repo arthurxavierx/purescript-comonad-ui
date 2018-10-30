@@ -22,7 +22,7 @@ optional
   :: forall m w f a
    . Functor m
   => Comonad w
-  => UI m Identity (f a)
+  => UI m Identity f a
   -> Component m w f a
   -> Component m (Optional w) f a
 optional = S.combine <<< Identity
@@ -39,7 +39,7 @@ optional_ = S.combine <<< Identity <<< const
 lift :: forall w m. TransitionT w m ~> TransitionT (Optional w) m
 lift = S.liftRight
 
-liftUI :: forall w m. Comonad w => Functor m => UI m w ~> UI m (Optional w)
+liftUI :: forall w m f. Comonad w => Functor m => UI m w f ~> UI m (Optional w) f
 liftUI = S.liftUIRight
 
 hide :: forall w m. TransitionT (Optional w) m Unit
