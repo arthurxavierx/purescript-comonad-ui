@@ -22,6 +22,7 @@ import Control.Monad.State.Class (class MonadState)
 import Control.Monad.Trans.Class (class MonadTrans)
 import Control.Monad.Writer.Class (class MonadTell)
 import Data.Tuple (Tuple(..))
+import Effect.Class (class MonadEffect, liftEffect)
 
 -- | TODO: write documentation
 newtype TransitionT w m a = TransitionT (forall r. w (a -> m r) -> m r)
@@ -63,6 +64,9 @@ instance cmttMT :: Comonad w => Monad (TransitionT w m)
 instance cmttMTransT :: Comonad w => MonadTrans (TransitionT w) where
   lift :: forall m a. Monad m => m a -> TransitionT w m a
   lift ma = TransitionT \w -> extract (map (ma >>= _) w)
+
+instance cmttMEffectT :: (Comonad w, MonadEffect m) => MonadEffect (TransitionT w m) where
+  liftEffect eff = TransitionT \w -> extract (map (liftEffect eff >>= _) w)
 
 instance cmttMAT :: ComonadAsk e w => MonadAsk e (TransitionT w m) where
   ask = liftTransitionT (ask :: forall a. w a -> e)
