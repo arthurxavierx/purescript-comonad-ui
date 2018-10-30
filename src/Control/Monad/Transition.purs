@@ -22,6 +22,10 @@ import Data.Newtype (un)
 type Transition w a = T.TransitionT w Identity a
 
 -- | TODO: write documentation
+transition :: forall w a. (forall r. w (a -> r) -> r) -> Transition w a
+transition = T.TransitionT
+
+-- | TODO: write documentation
 runTransition :: forall w a r. Functor w => Transition w a -> w (a -> r) -> r
 runTransition t = un Identity <<< T.runTransitionT t <<< map (Identity <<< _)
 
