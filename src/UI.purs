@@ -7,60 +7,61 @@ import Control.Comonad.Trans.Class (class ComonadTrans, lower)
 import Control.Extend (extend)
 import Control.Monad.Transition.Trans (TransitionT, hoistTransitionT, pairTransitionT)
 
--- | A `Handler` is an event handler running in a `m` monad for actions of type `action`.
+-- | A `Handler` runs transitions on a monad `m`.
+-- |
+-- | It is essencially a natural transformation from `TransitionT w m` to `m`,
+-- | but, for practical reasons, here it is defined as a transformation of
+-- | purely effectful transitions into purely effectful actions on `m`.
 type Handler m w = TransitionT w m Unit -> m Unit
 
--- | A `UI` is a function which outputs a description of type `a` of an interface given
--- | a way to handle the `action`s dispatched by this interface through a `Handler`.
+-- | A `UI` is a function which outputs a description of type `a` of an
+-- | interface given a way to handle the transitions dispatched by this
+-- | interface through means of a `Handler`.
 type UI m w a = Handler m w -> a
 
--- | A component is a comonad `w` representing the space of all possible future `UI`s.
--- | Through the use of `Pairing`s, one can `pair` this comonad `w` with a monad `m` for
--- | moving around in this space and, thus, modifying the state of the component.
+-- | A component is a comonad `w` representing the space of all possible future
+-- | `UI`s. It is a space (or context) containing `UI`s, and the shape of this
+-- | space (given by the shape of `w`) gives the possibilities for `UI`s in this
+-- | component.
 -- |
--- | In this way, a `Component` is a comonad `w` full of future `UI`s whose `Handler`s
--- | handle (in a `m` monad) actions of type `m Unit` dispatched by an interface of
--- | type `a`.
+-- | For example, the component given by the `Stream` comonad below is one
+-- | where its `UI`s only follow a predefined sequence:
+-- |
+-- | ```purescript
+-- | data Stream a = Cons a (Lazy (Stream a))
+-- | ```
+-- |
+-- | In this way, a `Component` is a comonad `w` containing a current `UI` and
+-- | future `UI`s whose `Handler`s handle (in a `m` monad) transitions
+-- | dispoatched by an interface of type `a`.
 type Component m w f a = w (UI m w (f a))
 
--- | Given a way of writing/updating the component's state within a `m` monad and
--- | a current or initial `Component` (a space of interfaces), to `explore` a component
--- | means to get the current interface out of the component's comonad by wiring up the
--- | action handler with the `write` function supplied.
--- |
--- | This is a generic function for exploring the space of states defined by a comonad.
--- | Specific UI renderers must define their own specific derivations to effectively
--- | create the stateful components.
+-- | TODO: write documentation
 explore
   :: forall m w f a
    . Comonad w
   => Monad m
-  => (Component m w f a -> m Unit)
-  -> Component m w f a
-  -> f a
-explore write space = extract space send
-  where
-    send :: Handler m w
-    send transition =
-      pairTransitionT (const identity) transition (extend pure space)
-      >>= write
-
--- | TODO: write documentation
-explore'
-  :: forall m w f a
-   . Comonad w
-  => Monad m
-  => (m (Component m w f a))
+  => m (Component m w f a)
   -> (Component m w f a -> m Unit)
   -> Component m w f a
   -> f a
-explore' read write space = extract space send
+explore read write space = extract space send
   where
     send :: Handler m w
     send transition =
       read
       >>= pairTransitionT (const identity) transition <<< extend pure
       >>= write
+
+-- | TODO: write documentation
+explore_
+  :: forall m w f a
+   . Comonad w
+  => Monad m
+  => (Component m w f a -> m Unit)
+  -> Component m w f a
+  -> f a
+explore_ write space = explore (pure space) write space
 
 -- | TODO: write documentation
 liftUI
