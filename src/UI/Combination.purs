@@ -13,15 +13,16 @@ import Control.Monad.Transition.Trans (TransitionT(..), runTransitionT)
 import Data.Smash (class ComonadSmash, class Smashed, Smash, smash)
 import Data.Smash (lower) as S
 import Data.Symbol (class IsSymbol, SProxy)
+import Prim.Row as Row
 import Type.Proxy (Proxy2)
-import Type.Row (class Cons, class RowToList) as Row
+import Type.RowList (class RowToList)
 import UI as UI
 
 type Combination = Smash
 
 combine
   :: forall rl proxies r as a
-   . Row.RowToList r rl
+   . RowToList r rl
   => Smashed rl r proxies as
   => (Record as -> a)
   -> Record r
@@ -33,7 +34,7 @@ lift
    . IsSymbol l
   => Functor w
   => Row.Cons l (Proxy2 w) rest r
-  => Row.RowToList rest rl
+  => RowToList rest rl
   => ComonadSmash rl rest
   => SProxy l
   -> TransitionT w m ~> TransitionT (Smash r) m
@@ -45,7 +46,7 @@ liftUI
   => Row.Cons l (Proxy2 w) rest r
   => Comonad w
   => Functor m
-  => Row.RowToList rest rl
+  => RowToList rest rl
   => ComonadSmash rl rest
   => SProxy l
   -> UI.UI m w f ~> UI.UI m (Smash r) f
